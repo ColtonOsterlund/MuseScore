@@ -90,6 +90,11 @@ struct SndConfig {
 
 bool graceNotesMerged(Chord* chord);
 
+
+// Data structure to keep track of previous articulations in order to only create new CC events when an articulation changes rather than one for each note
+// The structure is: <staffIdx, <ccLane, ccValue>>
+std::map<int, std::map<int, int>> PreviousMidiCCArticulationValueDict = {};
+
 //---------------------------------------------------------
 //   updateSwing
 //---------------------------------------------------------
@@ -339,7 +344,7 @@ static void playNote(EventMap* events, const Note* note, int channel, int pitch,
 //---------------------------------------------------------
 
 static void collectNote(EventMap* events, int channel, const Note* note, double velocityMultiplier, int tickOffset, Staff* staff,
-                        SndConfig config)
+    SndConfig config)
 {
     if (!note->play() || note->hidden()) {      // do not play overlapping notes
         return;
@@ -368,21 +373,23 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
                 // if we wish to suppress first note of ornament,
                 // then do this regardless of number of NoteEvents
                 tieLen += (n->chord()->actualTicks().ticks() * (nel[0].len())) / 1000;
-            } else {
+            }
+            else {
                 // recurse
                 collectNote(events, channel, n, velocityMultiplier, tickOffset, staff, config);
                 break;
             }
             if (n->tieFor() && n != n->tieFor()->endNote()) {
                 n = n->tieFor()->endNote();
-            } else {
+            }
+            else {
                 break;
             }
         }
     }
 
-    int tick1    = chord->tick().ticks() + tickOffset;
-    bool tieFor  = note->tieFor();
+    int tick1 = chord->tick().ticks() + tickOffset;
+    bool tieFor = note->tieFor();
     bool tieBack = note->tieBack();
 
     NoteEventList nel = note->playEvents();
@@ -400,10 +407,11 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
         int p = pitch + e.pitch();
         if (p < 0) {
             p = 0;
-        } else if (p > 127) {
+        }
+        else if (p > 127) {
             p = 127;
         }
-        int on  = tick1 + (ticks * e.ontime()) / 1000;
+        int on = tick1 + (ticks * e.ontime()) / 1000;
         int off = on + (ticks * e.len()) / 1000 - 1;
         if (tieFor && i == static_cast<int>(nels) - 1) {
             off += tieLen;
@@ -423,7 +431,8 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
                 velo = staff->velocities().val(nonUnwoundTick);
                 break;
             }
-        } else {
+        }
+        else {
             velo = staff->velocities().val(nonUnwoundTick);
         }
 
@@ -478,7 +487,8 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
                 if (velocityMap.find(t) != velocityMap.end()) {
                     lastVelocity = velocityMap[t];
                     velocityMap[t] *= realMult;
-                } else {
+                }
+                else {
                     velocityMap[t] = lastVelocity * realMult;
                 }
             }
@@ -509,7 +519,7 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
         int lastPointTick = tick1;
         for (size_t pitchIndex = 0; pitchIndex < pitchSize - 1; pitchIndex++) {
             PitchValue pitchValue = points[pitchIndex];
-            PitchValue nextPitch  = points[pitchIndex + 1];
+            PitchValue nextPitch = points[pitchIndex + 1];
             int nextPointTick = tick1 + nextPitch.time / 60.0 * noteLen;
             int pitch = pitchValue.pitch;
 
@@ -529,7 +539,7 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
             }
 
             double pitchDelta = nextPitch.pitch - pitch;
-            double tickDelta  = nextPitch.time - pitchValue.time;
+            double tickDelta = nextPitch.time - pitchValue.time;
             /*         B
                       /.                   pitch is 1/100 semitones
               bend   / .  pitchDelta       time is in noteDuration/60
@@ -556,6 +566,139 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
         events->insert(std::pair<int, NPlayEvent>(tick1 + int(noteLen), ev));
     }
 }
+
+
+
+//---------------------------------------------------------
+//   collectNoteWithArticulations
+//---------------------------------------------------------
+
+static void collectNoteWithArticulations(EventMap* events, int channel, const Note* note, double velocityMultiplier, int tickOffset, Staff* staff,
+    SndConfig config)
+{
+    if (!note->play() || note->hidden()) {      // do not play overlapping notes
+        return;
+    }
+    Chord* chord = note->chord();
+
+    int staffIdx = static_cast<int>(staff->idx());
+    int ticks;
+    int tieLen = 0;
+    if (chord->isGrace()) {
+        assert(!graceNotesMerged(chord));      // this function should not be called on a grace note if grace notes are merged
+        chord = toChord(chord->explicitParent());
+    }
+
+    ticks = chord->actualTicks().ticks();   // ticks of the actual note
+    // calculate additional length due to ties forward
+    // taking NoteEvent length adjustments into account
+    // but stopping at any note with multiple NoteEvents
+    // and processing those notes recursively
+    if (note->tieFor()) {
+        Note* n = note->tieFor()->endNote();
+        while (n) {
+            NoteEventList nel = n->playEvents();
+            if (nel.size() == 1 && !isGlissandoFor(n)) {
+                // add value of this note to main note
+                // if we wish to suppress first note of ornament,
+                // then do this regardless of number of NoteEvents
+                tieLen += (n->chord()->actualTicks().ticks() * (nel[0].len())) / 1000;
+            }
+            else {
+                // recurse
+                collectNote(events, channel, n, velocityMultiplier, tickOffset, staff, config);
+                break;
+            }
+            if (n->tieFor() && n != n->tieFor()->endNote()) {
+                n = n->tieFor()->endNote();
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    int tick1 = chord->tick().ticks() + tickOffset;
+    bool tieFor = note->tieFor();
+    bool tieBack = note->tieBack();
+
+    NoteEventList nel = note->playEvents();
+    size_t nels = nel.size();
+    for (int i = 0, pitch = note->ppitch(); i < static_cast<int>(nels); ++i) {
+        const NoteEvent& e = nel[i];     // we make an explicit const ref, not a const copy.  no need to copy as we won't change the original object.
+
+        // skip if note has a tie into it and only one NoteEvent
+        // its length was already added to previous note
+        // if we wish to suppress first note of ornament
+        // then change "nels == 1" to "i == 0", and change "break" to "continue"
+        if (tieBack && nels == 1 && !isGlissandoFor(note)) {
+            break;
+        }
+        int p = pitch + e.pitch();
+        if (p < 0) {
+            p = 0;
+        }
+        else if (p > 127) {
+            p = 127;
+        }
+        int on = tick1 + (ticks * e.ontime()) / 1000;
+        int off = on + (ticks * e.len()) / 1000 - 1;
+        if (tieFor && i == static_cast<int>(nels) - 1) {
+            off += tieLen;
+        }
+
+        // Get the velocity used for this note from the staff
+        // This allows correct playback of tremolos even without SND enabled.
+        int velo;
+        Fraction nonUnwoundTick = Fraction::fromTicks(on - tickOffset);
+        if (config.useSND) {
+            switch (config.method) {
+            case DynamicsRenderMethod::FIXED_MAX:
+                velo = 127;
+                break;
+            case DynamicsRenderMethod::SEG_START:
+            default:
+                velo = staff->velocities().val(nonUnwoundTick);
+                break;
+            }
+        }
+        else {
+            velo = staff->velocities().val(nonUnwoundTick);
+        }
+
+        velo *= velocityMultiplier;
+        playNote(events, note, channel, p, std::clamp(velo, 1, 127), on, off, staffIdx);
+
+
+        // ADD ALL ARTICULATIONS THAT WE WANT TO TRIGGER AS CC EVENTS HERE:
+        addMidiCCArticulations(events, channel, note, tickOffset, staffIdx);
+
+    }
+
+}
+
+
+
+static void addMidiCCArticulations(EventMap* events, int channel, const Note* note, int tickOffset, int staffIdx)
+{
+    
+    for (auto const& [key, val] : note->MidiCCArticulations) {
+        int ccLane = std::get<0>(val);
+        int ccValue = std::get<1>(val);
+
+        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { // If the key doesn't already exist in the map, it will be added with a null value
+            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
+            event.setOriginatingStaff(staffIdx);
+            events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+            PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+        }
+    }
+
+}
+
+
+
+
 
 //---------------------------------------------------------
 //   aeolusSetStop
@@ -887,19 +1030,19 @@ void MidiRenderer::collectMeasureEventsDefault(EventMap* events, Measure const* 
             if (!graceNotesMerged(chord)) {
                 for (Chord* c : chord->graceNotesBefore()) {
                     for (const Note* note : c->notes()) {
-                        collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                        collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
                     }
                 }
             }
 
             for (const Note* note : chord->notes()) {
-                collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
             }
 
             if (!graceNotesMerged(chord)) {
                 for (Chord* c : chord->graceNotesAfter()) {
                     for (const Note* note : c->notes()) {
-                        collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                        collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
                     }
                 }
             }
@@ -2150,6 +2293,7 @@ void Score::createPlayEvents(Chord* chord)
     if (chord->playEventType() == PlayEventType::Auto) {
         chord->setNoteEventLists(el);
     }
+
     // don't change event list if type is PlayEventType::User
 }
 

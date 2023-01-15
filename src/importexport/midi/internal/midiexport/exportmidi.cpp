@@ -228,6 +228,7 @@ bool ExportMidi::write(QIODevice* device, bool midiExpandRepeats, bool exportRPN
         tracks.push_back(MidiTrack());
     }
 
+    // This gets all of the note events with all articulations/etc.
     EventMap events;
     m_score->renderMidi(&events, false, midiExpandRepeats, synthState);
 

@@ -412,6 +412,13 @@ enum class SegmentType {
                          ///\}
 };
 
+
+// This will hold all of the available MidiCCArticulationTypes
+enum class MidiCCArticulationType {
+    HARMONIC,
+};
+
+
 constexpr SegmentType operator|(const SegmentType t1, const SegmentType t2)
 {
     return static_cast<SegmentType>(static_cast<int>(t1) | static_cast<int>(t2));

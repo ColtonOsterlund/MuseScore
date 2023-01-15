@@ -603,7 +603,7 @@ Fraction GPConverter::convertBeat(const GPBeat* beat, ChordRestContainer& graceC
         }
         graceChords.clear();
 
-        convertNotes(beat->notes(), cr);
+        convertNotes(beat->notes(), beat, cr);
 
         addTuplet(beat, cr);
         addTimer(beat, cr);
@@ -641,10 +641,10 @@ Fraction GPConverter::convertBeat(const GPBeat* beat, ChordRestContainer& graceC
     return ctx.curTick;
 }
 
-void GPConverter::convertNotes(const std::vector<std::shared_ptr<GPNote> >& notes, ChordRest* cr)
+void GPConverter::convertNotes(const std::vector<std::shared_ptr<GPNote> >& notes, const GPBeat* beat, ChordRest* cr)
 {
     for (const auto& note : notes) {
-        convertNote(note.get(), cr);
+        convertNote(note.get(), beat, cr);
     }
 
     //! NOTE: later notes order is used in linked staff to create ties, glissando
@@ -658,7 +658,7 @@ void GPConverter::convertNotes(const std::vector<std::shared_ptr<GPNote> >& note
     }
 }
 
-void GPConverter::convertNote(const GPNote* gpnote, ChordRest* cr)
+void GPConverter::convertNote(const GPNote* gpnote, const GPBeat* beat, ChordRest* cr)
 {
     if (cr->type() != ElementType::CHORD) {
         return;
@@ -693,11 +693,13 @@ void GPConverter::convertNote(const GPNote* gpnote, ChordRest* cr)
     addHarmonic(gpnote, note);
     addFingering(gpnote, note);
     addTie(gpnote, note);
+
+
 }
 
 void GPConverter::configureGraceChord(const GPBeat* beat, ChordRest* cr)
 {
-    convertNotes(beat->notes(), cr);
+    convertNotes(beat->notes(), beat, cr);
 
     if (cr->type() == ElementType::CHORD) {
         Chord* grChord = static_cast<Chord*>(cr);
@@ -1219,7 +1221,8 @@ void GPConverter::addContinuousSlideHammerOn()
             continue;
         }
 
-        if (SlideHammerOn::HammerOn == slide.second) {
+        if (slide.second == SlideHammerOn::HammerOn) {
+            startNote->setIsHammerOn(true);
             endNote->setIsHammerOn(true);
         }
 
@@ -1278,7 +1281,8 @@ void GPConverter::addContinuousSlideHammerOn()
 
         /// Sound info
         if (slide.second == SlideHammerOn::LegatoSlide
-            || slide.second == SlideHammerOn::Slide) {
+            || slide.second == SlideHammerOn::Slide
+            || slide.second == SlideHammerOn::HammerOn) {
             Note::SlideType slideType = (slide.second == SlideHammerOn::Slide
                                          ? Note::SlideType::Shift
                                          : Note::SlideType::Legato);

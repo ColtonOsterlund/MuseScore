@@ -572,6 +572,13 @@ public:
     const std::vector<LineAttachPoint>& lineAttachPoints() const { return _lineAttachPoints; }
 
     mu::PointF posInStaffCoordinates();
+
+    // This will store a list of all of the MIDI CC articulations appended to the note
+    // The structure is: <articulationId, <ccLane, ccValue>>
+    // A map works well for this structure since it will not add multiple of the same key, being the articulationID.
+    // Therefore, if a note gets an articulation based on a GP segment, it will not get the same (duplicated) articulation from the GP note
+    std::map<int, std::tuple<int, int>> MidiCCArticulations = {};
+
 };
 } // namespace mu::engraving
 #endif
