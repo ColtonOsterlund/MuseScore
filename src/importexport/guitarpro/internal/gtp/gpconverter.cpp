@@ -609,17 +609,18 @@ Fraction GPConverter::convertBeat(const GPBeat* beat, ChordRestContainer& graceC
         addTimer(beat, cr);
         addFreeText(beat, cr);
         addVibratoWTremBar(beat, cr);
-        addFadding(beat, cr);
+        addFadding(beat, cr); // ADD MIDI CC ARTICULATION
         addHairPin(beat, cr);
         addTremolo(beat, cr);
-        addPickStroke(beat, cr);
-        addDynamic(beat, cr);
+        addPickStroke(beat, cr); // ADD MIDI CC ARTICULATION
+        addDynamic(beat, cr); // ADD MIDI CC ARTICULATION
         addWah(beat, cr);
-        addGolpe(beat, cr);
+        addGolpe(beat, cr); // ADD MIDI CC ARTICULATION
         addFretDiagram(beat, cr, ctx);
         addBarre(beat, cr);
-        addSlapped(beat, cr);
-        addPopped(beat, cr);
+        addSlapped(beat, cr); 
+        addPopped(beat, cr); 
+        mergeSlappedPopped(beat, cr); // ADD MIDI CC ARTICULATION
         addBrush(beat, cr);
         addArpeggio(beat, cr);
         addLyrics(beat, cr, ctx);
@@ -671,30 +672,35 @@ void GPConverter::convertNote(const GPNote* gpnote, const GPBeat* beat, ChordRes
     cr->add(note);
     setPitch(note, gpnote->midiPitch());
     setTpc(note, gpnote->accidental());
-    addBend(gpnote, note);
+    addBend(gpnote, note); // ADD MIDI CC ARTICULATION
     addLetRing(gpnote, note);
-    addPalmMute(gpnote, note);
-    note->setGhost(gpnote->ghostNote());
+    addPalmMute(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+    //note->setGhost(gpnote->ghostNote());
+    addGhostDeadNote(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+
     if (engravingConfiguration()->guitarProImportExperimental()) {
         note->setHeadHasParentheses(gpnote->ghostNote());
     }
 
-    note->setDeadNote(gpnote->muted());
-    addAccent(gpnote, note);
+    //note->setDeadNote(gpnote->muted());
+    addAccent(gpnote, note); // ADD MIDI CC ARTICULATION
     addSlide(gpnote, note);
-    addPickScrape(gpnote, note);
+    addPickScrape(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
     collectHammerOn(gpnote, note);
-    addTapping(gpnote, note);
-    addLeftHandTapping(gpnote, note);
+    mergeSlidesHammerOns(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+    //addTapping(gpnote, note);
+    //addLeftHandTapping(gpnote, note);
+    addAllTapping(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
     addStringNumber(gpnote, note);
     addOrnament(gpnote, note);
-    addVibratoLeftHand(gpnote, note);
-    addTrill(gpnote, note);
-    addHarmonic(gpnote, note);
-    addFingering(gpnote, note);
+    addVibratoLeftHand(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+    addTrill(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+    addHarmonic(gpnote, note); // ADD MIDI CC ARTICULATION - DONE
+    addFingering(gpnote, note); // ADD MIDI CC ARTICULATION
     addTie(gpnote, note);
 
-
+    // Should rarely use const_cast, but in this case, it saved me from needing to restructure the entire callstack to this point from const GPBeat to GPBeat
+    const_cast<GPBeat*>(beat)->addConvertedNote(note);
 }
 
 void GPConverter::configureGraceChord(const GPBeat* beat, ChordRest* cr)
@@ -1708,6 +1714,7 @@ ChordRest* GPConverter::addChordRest(const GPBeat* beat, const Context& ctx)
 void GPConverter::addFingering(const GPNote* gpnote, Note* note)
 {
     if (gpnote->leftFingering().isEmpty() && gpnote->rightFingering().isEmpty()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 0));
         return;
     }
 
@@ -1727,6 +1734,28 @@ void GPConverter::addFingering(const GPNote* gpnote, Note* note)
         Fingering* f = Factory::createFingering(note);
         f->setPlainText(gpnote->rightFingering());
         note->add(f);
+
+        if (gpnote->rightFingering() == "p") {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 25));
+        }
+        else if (gpnote->rightFingering() == "i") {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 50));
+        }
+        else if (gpnote->rightFingering() == "m") {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 75));
+        }
+        else if (gpnote->rightFingering() == "a") {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 100));
+        }
+        else if (gpnote->rightFingering() == "c") {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 127));
+        }
+        else {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 0));
+        }
+    }
+    else {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(25, 0));
     }
 }
 
@@ -1748,10 +1777,12 @@ void GPConverter::addTrill(const GPNote* gpnote, Note* note)
 {
     UNUSED(note);
     if (gpnote->trill().auxillaryFret == -1) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TRILL), std::make_tuple(21, 0));
         return;
     }
 
     m_currentGPBeat->setTrill(true);
+    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TRILL), std::make_tuple(21, 127));
 }
 
 void GPConverter::addTrill(const GPBeat* gpbeat, ChordRest* cr)
@@ -1788,6 +1819,7 @@ void GPConverter::addOrnament(const GPNote* gpnote, Note* note)
 void GPConverter::addVibratoLeftHand(const GPNote* gpnote, Note* note)
 {
     if (gpnote->vibratoType() == GPNote::VibratoType::None) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(22, 0));
         return;
     }
 
@@ -1803,11 +1835,52 @@ void GPConverter::addVibratoLeftHand(const GPNote* gpnote, Note* note)
     };
 
     VibratoType vibratoType = scoreVibratoType(gpnote->vibratoType());
+
+    switch (vibratoType) {
+        case GPNote::VibratoType::Slight:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(22, 63));
+            break;
+        case GPNote::VibratoType::Wide:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(22, 127));
+            break;
+        default:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(22, 0));
+            break;
+    }
+
     addVibratoByType(note, vibratoType);
 }
 
 void GPConverter::addHarmonic(const GPNote* gpnote, Note* note)
 {
+
+    switch (gpnote->harmonic().type) {
+        case GPNote::Harmonic::Type::None:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 0));
+            break;
+        case GPNote::Harmonic::Type::Natural:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 21));
+            break;
+        case GPNote::Harmonic::Type::Artificial:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 42));
+            break;
+        case GPNote::Harmonic::Type::Pinch:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 63));
+            break;
+        case GPNote::Harmonic::Type::Tap:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 84));
+            break;
+        case GPNote::Harmonic::Type::Semi:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 105));
+            break;
+        case GPNote::Harmonic::Type::FeedBack:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 127));
+            break;
+        default:
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(20, 0));
+            break;
+    }
+
     if (gpnote->harmonic().type == GPNote::Harmonic::Type::None) {
         return;
     }
@@ -1858,6 +1931,7 @@ void GPConverter::addHarmonic(const GPNote* gpnote, Note* note)
 void GPConverter::addAccent(const GPNote* gpnote, Note* note)
 {
     if (gpnote->accents().none()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(28, 0));
         return;
     }
 
@@ -1879,6 +1953,25 @@ void GPConverter::addAccent(const GPNote* gpnote, Note* note)
         if (gpnote->accents()[flagIdx] && symbolsIds.find(accentType(flagIdx)) == symbolsIds.end()) {
             Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
             art->setSymId(accentType(flagIdx));
+
+            switch (accentType(flagIdx)) {
+            case SymId::articStaccatoAbove:
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(28, 31));
+                break;
+            case SymId::articMarcatoAbove:
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(28, 62));
+                break;
+            case SymId::articAccentAbove:
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(28, 93));
+                break;
+            case SymId::dynamicSforzando:
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(28, 127));
+                break;
+            default:
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(28, 0));
+                break;
+            }
+
             note->chord()->add(art);
         }
     }
@@ -1910,6 +2003,34 @@ void GPConverter::addTapping(const GPNote* gpnote, Note* note)
     }
 }
 
+void GPConverter::addAllTapping(const GPNote* gpnote, Note* note)
+{
+    if (!gpnote->tapping() && !gpnote->leftHandTapped()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(23, 0));
+        return;
+    }
+
+    if (gpnote->tapping()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(23, 63));
+
+        if (Chord* ch = toChord(note->parent())) {
+            Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
+            art->setTextType(Articulation::TextType::TAP);
+            ch->add(art);
+        }
+    }
+    else if (gpnote->leftHandTapped()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(23, 127));
+
+        Articulation* art = Factory::createArticulation(note->score()->dummy()->chord());
+        art->setSymId(SymId::guitarLeftHandTapping);
+        if (!note->score()->toggleArticulation(note, art)) {
+            delete art;
+        }
+    }
+
+}
+
 void GPConverter::addSlide(const GPNote* gpnote, Note* note)
 {
     if (gpnote->slides().none()) {
@@ -1918,6 +2039,7 @@ void GPConverter::addSlide(const GPNote* gpnote, Note* note)
 
     addSingleSlide(gpnote, note);
     collectContinuousSlide(gpnote, note);
+
 }
 
 void GPConverter::addSingleSlide(const GPNote* gpnote, Note* note)
@@ -1975,19 +2097,53 @@ void GPConverter::addPickScrape(const GPNote* gpnote, Note* note)
         }
 
         m_currentGPBeat->setPickScrape(true);
+
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSCRAPE), std::make_tuple(15, 127));
+    }
+    else {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSCRAPE), std::make_tuple(15, 0));
     }
 }
 
 void GPConverter::collectHammerOn(const GPNote* gpnote, Note* note)
 {
+   
     if (gpnote->hammerOn() == GPNote::HammerOn::Start) {
         _slideHammerOnMap.push_back(std::pair(note, SlideHammerOn::HammerOn));
+    }
+}
+
+void GPConverter::mergeSlidesHammerOns(const GPNote* gpnote, Note* note) {
+    if (gpnote->hammerOn() == GPNote::HammerOn::Start) { // HAMMER ON
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 127));
+    }
+    else if (gpnote->slides()[0]) { // SHIFT
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 18));
+    }
+    else if (gpnote->slides()[1]) { // LEGATO
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 36));
+    }
+    else if (gpnote->slides()[2]) { // PLOP
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 54));
+    }
+    else if (gpnote->slides()[3]) { // LIFT
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 72));
+    }
+    else if (gpnote->slides()[4]) { // DOIT
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 90));
+    }
+    else if (gpnote->slides()[5]) { // FALL
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 108));
+    }
+    else { // NONE
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLIDEHAMMERONPULLOFF), std::make_tuple(24, 0));
     }
 }
 
 void GPConverter::addBend(const GPNote* gpnote, Note* note)
 {
     if (!gpnote->bend()) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(86, 0));
         return;
     }
 
@@ -2048,6 +2204,9 @@ void GPConverter::addBend(const GPNote* gpnote, Note* note)
     bend->setTrack(note->track());
     note->add(bend);
     m_bends.push_back(bend);
+
+    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(86, 127));
+
 }
 
 void GPConverter::addLineElement(ChordRest* cr, std::vector<SLine*>& elements, ElementType muType, LineImportType importType,
@@ -2260,6 +2419,53 @@ void GPConverter::addDynamic(const GPBeat* gpb, ChordRest* cr)
         return u"ppp";
     };
 
+
+	if (gpb->dynamic() == GPBeat::DynamicType::FFF) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (114 - 103 + 1) + 103)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::FF) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (102 - 90 + 1) + 90)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::F) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::MF) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (76 - 65 + 1) + 65)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::MP) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (64 - 52 + 1) + 52)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::P) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (51 - 39 + 1) + 39)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::PP) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (38 - 26 + 1) + 26)));
+		}
+	}
+	else if (gpb->dynamic() == GPBeat::DynamicType::PPP) {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (25 - 1 + 1) + 1)));
+		}
+	}
+	else {
+		for (Note* note : gpb->convertedNotes()) {
+			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
+		}
+	}
+
     Dynamic* dynamic = Factory::createDynamic(_score->dummy()->segment());
     dynamic->setTrack(cr->track());
     dynamic->setDynamicType(convertDynamic(gpb->dynamic()));
@@ -2397,6 +2603,7 @@ void GPConverter::addOttava(const GPBeat* gpb, ChordRest* cr)
 
     ottava->setOttavaType(type);
 
+
     for (mu::engraving::Note* note : chord->notes()) {
         int pitch = note->pitch();
         if (type == mu::engraving::OttavaType::OTTAVA_8VA) {
@@ -2421,11 +2628,33 @@ void GPConverter::addLetRing(const GPNote* gpnote, Note* note)
     }
 }
 
-void GPConverter::addPalmMute(const GPNote* gpnote, Note* /*note*/)
+void GPConverter::addPalmMute(const GPNote* gpnote, Note* note)
 {
     if (gpnote->palmMute() && m_currentGPBeat) {
         m_currentGPBeat->setPalmMute(true);
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PALMMUTE), std::make_tuple(3, 127));
         //note->setPalmMute(true); TODO-gp: palm mute playback
+    }
+    else {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PALMMUTE), std::make_tuple(3, 0));
+    }
+}
+
+void GPConverter::addGhostDeadNote(const GPNote* gpnote, Note* note)
+{
+    bool isGhost = gpnote->ghostNote();
+    bool isDead = gpnote->muted();
+    note->setGhost(isGhost);
+    note->setDeadNote(isDead);
+
+    if (isGhost) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(14, 63));
+    }
+    else if (isDead) {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(14, 127));
+    }
+    else {
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(14, 0));
     }
 }
 
@@ -2441,6 +2670,16 @@ void GPConverter::addPalmMute(const GPBeat* gpbeat, ChordRest* cr)
 
 void GPConverter::addDive(const GPBeat* beat, ChordRest* cr)
 {
+    if (beat->dive()) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 127));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 0));
+        }
+    }
     addLineElement(cr, m_dives, ElementType::WHAMMY_BAR, LineImportType::WHAMMY_BAR, beat->dive());
 }
 
@@ -2545,6 +2784,25 @@ void GPConverter::addPopped(const GPBeat* beat, ChordRest* cr)
     Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
     art->setTextType(Articulation::TextType::POP);
     cr->add(art);
+}
+
+void GPConverter::mergeSlappedPopped(const GPBeat* beat, ChordRest* cr)
+{
+    if (beat->popped()) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(27, 127));
+        }
+    }
+    else if (beat->slapped()) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(27, 63));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(27, 0));
+        }
+    }
 }
 
 void GPConverter::addBrush(const GPBeat* beat, ChordRest* cr)
@@ -2761,8 +3019,32 @@ void GPConverter::addVibratoWTremBar(const GPBeat* beat, ChordRest* cr)
 void GPConverter::addFadding(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->fadding() == GPBeat::Fadding::None) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(30, 0));
+        }
         return;
     }
+    else if (beat->fadding() == GPBeat::Fadding::FadeIn) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(30, 42));
+        }
+    }
+    else if (beat->fadding() == GPBeat::Fadding::FadeOut) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(30, 84));
+        }
+    }
+    else if(beat->fadding() == GPBeat::Fadding::VolumeSwell) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(30, 127));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(30, 0));
+        }
+    }
+
     if (cr->type() != ElementType::CHORD) {
         return;
     }
@@ -2802,7 +3084,26 @@ void GPConverter::addHairPin(const GPBeat* beat, ChordRest* cr)
 void GPConverter::addPickStroke(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->pickStroke() == GPBeat::PickStroke::None) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(26, 0));
+        }
+
         return;
+    }
+    else if (beat->pickStroke() == GPBeat::PickStroke::Up) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(26, 63));
+        }
+    }
+    else if (beat->pickStroke() == GPBeat::PickStroke::Down) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(26, 127));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(26, 0));
+        }
     }
     if (cr->type() != ElementType::CHORD) {
         return;
@@ -2821,6 +3122,7 @@ void GPConverter::addPickStroke(const GPBeat* beat, ChordRest* cr)
     if (!_score->toggleArticulation(static_cast<Chord*>(cr)->upNote(), art)) {
         delete art;
     }
+
 }
 
 void GPConverter::addTremolo(const GPBeat* beat, ChordRest* cr)
@@ -2871,7 +3173,25 @@ void GPConverter::addWah(const GPBeat* beat, ChordRest* cr)
 void GPConverter::addGolpe(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->golpe() == GPBeat::Golpe::None) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(31, 0));
+        }
         return;
+    }
+    else if (beat->golpe() == GPBeat::Golpe::Finger) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(31, 63));
+        }
+    }
+    else if (beat->golpe() == GPBeat::Golpe::Thumb) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(31, 127));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(31, 0));
+        }
     }
     if (cr->type() != ElementType::CHORD) {
         return;

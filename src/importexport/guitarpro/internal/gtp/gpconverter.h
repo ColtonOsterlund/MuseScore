@@ -127,23 +127,26 @@ private:
     void addFretDiagram(const GPBeat* gpnote, ChordRest* note, const Context& ctx);
     ChordRest* addChordRest(const GPBeat* beats, const Context& ctx);
     void addOrnament(const GPNote* gpnote, Note* note);
-    void addVibratoLeftHand(const GPNote* gpnote, Note* note); // USE IN MIDI CC
+    void addVibratoLeftHand(const GPNote* gpnote, Note* note);
     void addVibratoByType(const Note* note, VibratoType type);
-    void addTrill(const GPNote* gpnote, Note* note); // USE IN MIDI CC
-    void addHarmonic(const GPNote* gpnote, Note* note); // USE IN MIDI CC - DONE
+    void addTrill(const GPNote* gpnote, Note* note);
+    void addHarmonic(const GPNote* gpnote, Note* note);
     void addFingering(const GPNote* gpnote, Note* note);
-    void addAccent(const GPNote* gpnote, Note* note); // USE IN MIDI CC
+    void addAccent(const GPNote* gpnote, Note* note);
     void addLeftHandTapping(const GPNote* gpnote, Note* note);
     void addStringNumber(const GPNote* gpnote, Note* note);
-    void addTapping(const GPNote* gpnote, Note* note); // USE IN MIDI CC - DONE
-    void addSlide(const GPNote* gpnote, Note* note); // USE IN MIDI CC - DONE
+    void addTapping(const GPNote* gpnote, Note* note);
+    void addAllTapping(const GPNote* gpnote, Note* note);
+    void addSlide(const GPNote* gpnote, Note* note);
     void addSingleSlide(const GPNote* gpnote, Note* note);
-    void addPickScrape(const GPNote* gpnote, Note* note); // USE IN MIDI CC
+    void addPickScrape(const GPNote* gpnote, Note* note);
     void addLetRing(const GPNote* gpnote, Note* note);
-    void addPalmMute(const GPNote* gpnote, Note* note); // USE IN MIDI CC
+    void addPalmMute(const GPNote* gpnote, Note* note);
+    void addGhostDeadNote(const GPNote* gpnote, Note* note);
     void collectContinuousSlide(const GPNote* gpnote, Note* note);
     void collectHammerOn(const GPNote* gpnote, Note* note);
-    void addBend(const GPNote* gpnote, Note* note); // USE IN MIDI CC
+    void mergeSlidesHammerOns(const GPNote* gpnote, Note* note);
+    void addBend(const GPNote* gpnote, Note* note);
     void setPitch(Note* note, const GPNote::MidiPitch& midiPitch);
     void setTpc(Note* note, int accidental);
     int calculateDrumPitch(int element, int variation, const String& instrumentName);
@@ -152,9 +155,10 @@ private:
     void addLegato(const GPBeat* beat, ChordRest* cr);
     void addOttava(const GPBeat* gpb, ChordRest* cr);
     void addDynamic(const GPBeat* beat, ChordRest* cr);
-    void addSlapped(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addPopped(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addBrush(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC (I think this is like a sweep)
+    void addSlapped(const GPBeat* beat, ChordRest* cr);
+    void addPopped(const GPBeat* beat, ChordRest* cr);
+    void mergeSlappedPopped(const GPBeat* beat, ChordRest* cr);
+    void addBrush(const GPBeat* beat, ChordRest* cr);
     void addArpeggio(const GPBeat* beat, ChordRest* cr);
     void addTimer(const GPBeat* beat, ChordRest* cr);
     void addFreeText(const GPBeat* beat, ChordRest* cr);
@@ -162,19 +166,19 @@ private:
     void addLetRing(const GPBeat* gpbeat, ChordRest* cr);
     void addPalmMute(const GPBeat* gpbeat, ChordRest* cr);
     void addTrill(const GPBeat* gpbeat, ChordRest* cr);
-    void addDive(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
+    void addDive(const GPBeat* beat, ChordRest* cr);
     void addPickScrape(const GPBeat* beat, ChordRest* cr);
     void addHarmonicMark(const GPBeat* gpbeat, ChordRest* cr);
     void setupTupletStyle(Tuplet* tuplet);
-    void addVibratoWTremBar(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addFadding(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
+    void addVibratoWTremBar(const GPBeat* beat, ChordRest* cr);
+    void addFadding(const GPBeat* beat, ChordRest* cr);
     void addHairPin(const GPBeat* beat, ChordRest* cr);
-    void addRasgueado(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
+    void addRasgueado(const GPBeat* beat, ChordRest* cr);
     void addPickStroke(const GPBeat* beat, ChordRest* cr);
-    void addTremolo(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addWah(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addGolpe(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
-    void addBarre(const GPBeat* beat, ChordRest* cr); // USE IN MIDI CC
+    void addTremolo(const GPBeat* beat, ChordRest* cr);
+    void addWah(const GPBeat* beat, ChordRest* cr);
+    void addGolpe(const GPBeat* beat, ChordRest* cr);
+    void addBarre(const GPBeat* beat, ChordRest* cr);
     void addLyrics(const GPBeat* beat, ChordRest* cr, const Context& ctx);
     void clearDefectedGraceChord(ChordRestContainer& graceGhords);
 

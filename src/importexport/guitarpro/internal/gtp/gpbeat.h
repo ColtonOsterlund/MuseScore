@@ -7,6 +7,7 @@
 
 #include "gpnote.h"
 #include "gprhythm.h"
+#include "libmscore/note.h"
 
 namespace mu::engraving {
 class GPBeat
@@ -82,7 +83,7 @@ public:
     };
 
     void addGPNote(const std::shared_ptr<GPNote>& n) { _notes.push_back(n); }
-    void addConvertedNote(const std::shared_ptr<Note>& n) { _convertedNotes.push_back(n); }
+    void addConvertedNote(Note* n) { _convertedNotes.push_back(n); }
     void addGPRhythm(const std::shared_ptr<GPRhythm>& n) { _rhythm = n; }
     void setDynamic(GPBeat::DynamicType t) { _dynamic = t; }
     void setLegatoType(GPBeat::LegatoType t) { _legato = t; }
@@ -182,7 +183,7 @@ public:
     BeamMode beamMode() const { return m_beamMode; }
 
     const std::vector<std::shared_ptr<GPNote> >& notes() const { return _notes; }
-    const std::vector<std::shared_ptr<Note> >& convertedNotes() const { return _convertedNotes; }
+    const std::vector<Note* >& convertedNotes() const { return _convertedNotes; }
 
     //! NOTE В текущей версии GP 6.2.0 (и позднее) в биты записывается уже расставленная лирика,
     //! поэтому достаточно поля lyrics у бита.
@@ -244,7 +245,7 @@ public:
 private:
     int _id = -1;
     std::vector<std::shared_ptr<GPNote> > _notes;
-    std::vector<std::shared_ptr<Note> > _convertedNotes;
+    std::vector<Note* > _convertedNotes;
     std::map<Key, std::string> _lyrics;
     std::map<Key, int> _diagramIdx;
     std::shared_ptr<GPRhythm> _rhythm;

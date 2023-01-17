@@ -95,6 +95,25 @@ bool graceNotesMerged(Chord* chord);
 // The structure is: <staffIdx, <ccLane, ccValue>>
 std::map<int, std::map<int, int>> PreviousMidiCCArticulationValueDict = {};
 
+
+static void addMidiCCArticulations(EventMap* events, int channel, const Note* note, int tickOffset, int staffIdx)
+{
+
+    for (auto const& [key, val] : note->MidiCCArticulations) {
+        int ccLane = std::get<0>(val);
+        int ccValue = std::get<1>(val);
+
+        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { // If the key doesn't already exist in the map, it will be added with a null value
+            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
+            event.setOriginatingStaff(staffIdx);
+            events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+            PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+        }
+    }
+
+}
+
+
 //---------------------------------------------------------
 //   updateSwing
 //---------------------------------------------------------
@@ -676,28 +695,6 @@ static void collectNoteWithArticulations(EventMap* events, int channel, const No
     }
 
 }
-
-
-
-static void addMidiCCArticulations(EventMap* events, int channel, const Note* note, int tickOffset, int staffIdx)
-{
-    
-    for (auto const& [key, val] : note->MidiCCArticulations) {
-        int ccLane = std::get<0>(val);
-        int ccValue = std::get<1>(val);
-
-        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { // If the key doesn't already exist in the map, it will be added with a null value
-            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
-            event.setOriginatingStaff(staffIdx);
-            events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
-            PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
-        }
-    }
-
-}
-
-
-
 
 
 //---------------------------------------------------------

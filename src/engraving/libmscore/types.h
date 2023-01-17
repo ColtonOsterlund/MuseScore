@@ -415,7 +415,21 @@ enum class SegmentType {
 
 // This will hold all of the available MidiCCArticulationTypes
 enum class MidiCCArticulationType {
+    PALMMUTE,
+    GHOSTDEADNOTE,
+    PICKSCRAPE,
     HARMONIC,
+    TRILL,
+    VIBRATO,
+    TAPPING,
+    SLIDEHAMMERONPULLOFF,
+    FINGERING,
+    PICKSTROKE,
+    ACCENT,
+    WHAMMY,
+    FADING,
+    DYNAMIC,
+    BEND
 };
 
 
