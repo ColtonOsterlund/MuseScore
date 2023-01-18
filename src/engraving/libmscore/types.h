@@ -429,7 +429,10 @@ enum class MidiCCArticulationType {
     WHAMMY,
     FADING,
     DYNAMIC,
-    BEND
+    BEND,
+    LETRING,
+    HAIRPIN,
+    RASGUEADO
 };
 
 

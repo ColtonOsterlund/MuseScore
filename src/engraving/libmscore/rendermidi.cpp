@@ -103,12 +103,24 @@ static void addMidiCCArticulations(EventMap* events, int channel, const Note* no
         int ccLane = std::get<0>(val);
         int ccValue = std::get<1>(val);
 
-        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { // If the key doesn't already exist in the map, it will be added with a null value
-            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
-            event.setOriginatingStaff(staffIdx);
-            events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
-            PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+        if (int(key) == int(MidiCCArticulationType::WHAMMY)) {
+            if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane] || ccValue != 0) { 
+                NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
+                event.setOriginatingStaff(staffIdx);
+                events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+                PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+            }
+
         }
+        else {
+            if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { 
+                NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
+                event.setOriginatingStaff(staffIdx);
+                events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+                PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+            }
+        }
+
     }
 
 }
@@ -340,14 +352,14 @@ static void playNote(EventMap* events, const Note* note, int channel, int pitch,
                         int midiPitch = (p * 16384) / 1200 + 8192;
                         NPlayEvent evb(ME_PITCHBEND, channel, midiPitch % 128, midiPitch / 128);
                         evb.setOriginatingStaff(staffIdx);
-                        events->insert(std::pair<int, NPlayEvent>(timeStamp, evb));
+                        //events->insert(std::pair<int, NPlayEvent>(timeStamp, evb)); // we only want bends and whammy dives to be on the pitchbend lane
                         t += 1.0;
                     }
                     ev.setVelo(0);
                     events->insert(std::pair<int, NPlayEvent>(offTime, ev));
                     NPlayEvent evb(ME_PITCHBEND, channel, 0, 64);           // 0:64 is 8192 - no pitch bend
                     evb.setOriginatingStaff(staffIdx);
-                    events->insert(std::pair<int, NPlayEvent>(offTime, evb));
+                    //events->insert(std::pair<int, NPlayEvent>(offTime, evb)); // we only want bends and whammy dives to be on the pitchbend lane
                     return;
                 }
             }
@@ -456,71 +468,75 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
         }
 
         velo *= velocityMultiplier;
+
+
+        velo = 80; //quick patch as we are routing dynamics to a different CC lane
         playNote(events, note, channel, p, std::clamp(velo, 1, 127), on, off, staffIdx);
     }
 
     // Single-note dynamics
     // Find any changes, and apply events
-    if (config.useSND) {
-        ChangeMap& veloEvents = staff->velocities();
-        ChangeMap& multEvents = staff->velocityMultiplications();
-        Fraction stick = chord->tick();
-        Fraction etick = stick + chord->ticks();
-        auto changes = veloEvents.changesInRange(stick, etick);
-        auto multChanges = multEvents.changesInRange(stick, etick);
+    //if (config.useSND) {
+    //    ChangeMap& veloEvents = staff->velocities();
+    //    ChangeMap& multEvents = staff->velocityMultiplications();
+    //    Fraction stick = chord->tick();
+    //    Fraction etick = stick + chord->ticks();
+    //    auto changes = veloEvents.changesInRange(stick, etick);
+    //    auto multChanges = multEvents.changesInRange(stick, etick);
 
-        std::map<int, int> velocityMap;
-        for (auto& change : changes) {
-            int lastVal = -1;
-            int endPoint = change.second.ticks();
-            for (int t = change.first.ticks(); t <= endPoint; t++) {
-                int velo = veloEvents.val(Fraction::fromTicks(t));
-                if (velo == lastVal) {
-                    continue;
-                }
-                lastVal = velo;
+    //    std::map<int, int> velocityMap;
+    //    for (auto& change : changes) {
+    //        int lastVal = -1;
+    //        int endPoint = change.second.ticks();
+    //        for (int t = change.first.ticks(); t <= endPoint; t++) {
+    //            int velo = veloEvents.val(Fraction::fromTicks(t));
+    //            if (velo == lastVal) {
+    //                continue;
+    //            }
+    //            lastVal = velo;
 
-                velocityMap[t] = velo;
-            }
-        }
+    //            velocityMap[t] = velo;
+    //        }
+    //    }
 
-        double CONVERSION_FACTOR = MidiRenderer::ARTICULATION_CONV_FACTOR;
-        for (auto& change : multChanges) {
-            // Ignore fix events: they are available as cached ramp starts
-            // and considering them ends up with multiplying twice effectively
-            if (change.first == change.second) {
-                continue;
-            }
+    //    double CONVERSION_FACTOR = MidiRenderer::ARTICULATION_CONV_FACTOR;
+    //    for (auto& change : multChanges) {
+    //        // Ignore fix events: they are available as cached ramp starts
+    //        // and considering them ends up with multiplying twice effectively
+    //        if (change.first == change.second) {
+    //            continue;
+    //        }
 
-            int lastVal = MidiRenderer::ARTICULATION_CONV_FACTOR;
-            int endPoint = change.second.ticks();
-            int lastVelocity = velocityMap.upper_bound(change.first.ticks())->second;
-            for (int t = change.first.ticks(); t <= endPoint; t++) {
-                int mult = multEvents.val(Fraction::fromTicks(t));
-                if (mult == lastVal || mult == CONVERSION_FACTOR) {
-                    continue;
-                }
-                lastVal = mult;
+    //        int lastVal = MidiRenderer::ARTICULATION_CONV_FACTOR;
+    //        int endPoint = change.second.ticks();
+    //        int lastVelocity = velocityMap.upper_bound(change.first.ticks())->second;
+    //        for (int t = change.first.ticks(); t <= endPoint; t++) {
+    //            int mult = multEvents.val(Fraction::fromTicks(t));
+    //            if (mult == lastVal || mult == CONVERSION_FACTOR) {
+    //                continue;
+    //            }
+    //            lastVal = mult;
 
-                double realMult = mult / CONVERSION_FACTOR;
-                if (velocityMap.find(t) != velocityMap.end()) {
-                    lastVelocity = velocityMap[t];
-                    velocityMap[t] *= realMult;
-                }
-                else {
-                    velocityMap[t] = lastVelocity * realMult;
-                }
-            }
-        }
+    //            double realMult = mult / CONVERSION_FACTOR;
+    //            if (velocityMap.find(t) != velocityMap.end()) {
+    //                lastVelocity = velocityMap[t];
+    //                velocityMap[t] *= realMult;
+    //            }
+    //            else {
+    //                velocityMap[t] = lastVelocity * realMult;
+    //            }
+    //        }
+    //    }
 
-        for (auto point = velocityMap.cbegin(); point != velocityMap.cend(); ++point) {
-            // NOTE:JT if we ever want to use poly aftertouch instead of CC, this is where we want to
-            // be using it. Instead of ME_CONTROLLER, use ME_POLYAFTER (but duplicate for each note in chord)
-            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, config.controller, std::clamp(point->second, 0, 127));
-            event.setOriginatingStaff(staffIdx);
-            events->insert(std::make_pair(point->first + tickOffset, event));
-        }
-    }
+    //    for (auto point = velocityMap.cbegin(); point != velocityMap.cend(); ++point) {
+    //        // NOTE:JT if we ever want to use poly aftertouch instead of CC, this is where we want to
+    //        // be using it. Instead of ME_CONTROLLER, use ME_POLYAFTER (but duplicate for each note in chord)
+    //        NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, config.controller, std::clamp(point->second, 0, 127));
+    //        event.setOriginatingStaff(staffIdx);
+    //        events->insert(std::make_pair(point->first + tickOffset, event));
+    //    }
+    //}
+
 
     // Bends
     for (EngravingItem* e : note->el()) {
@@ -584,115 +600,9 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
         ev.setOriginatingStaff(staffIdx);
         events->insert(std::pair<int, NPlayEvent>(tick1 + int(noteLen), ev));
     }
-}
 
-
-
-//---------------------------------------------------------
-//   collectNoteWithArticulations
-//---------------------------------------------------------
-
-static void collectNoteWithArticulations(EventMap* events, int channel, const Note* note, double velocityMultiplier, int tickOffset, Staff* staff,
-    SndConfig config)
-{
-    if (!note->play() || note->hidden()) {      // do not play overlapping notes
-        return;
-    }
-    Chord* chord = note->chord();
-
-    int staffIdx = static_cast<int>(staff->idx());
-    int ticks;
-    int tieLen = 0;
-    if (chord->isGrace()) {
-        assert(!graceNotesMerged(chord));      // this function should not be called on a grace note if grace notes are merged
-        chord = toChord(chord->explicitParent());
-    }
-
-    ticks = chord->actualTicks().ticks();   // ticks of the actual note
-    // calculate additional length due to ties forward
-    // taking NoteEvent length adjustments into account
-    // but stopping at any note with multiple NoteEvents
-    // and processing those notes recursively
-    if (note->tieFor()) {
-        Note* n = note->tieFor()->endNote();
-        while (n) {
-            NoteEventList nel = n->playEvents();
-            if (nel.size() == 1 && !isGlissandoFor(n)) {
-                // add value of this note to main note
-                // if we wish to suppress first note of ornament,
-                // then do this regardless of number of NoteEvents
-                tieLen += (n->chord()->actualTicks().ticks() * (nel[0].len())) / 1000;
-            }
-            else {
-                // recurse
-                collectNote(events, channel, n, velocityMultiplier, tickOffset, staff, config);
-                break;
-            }
-            if (n->tieFor() && n != n->tieFor()->endNote()) {
-                n = n->tieFor()->endNote();
-            }
-            else {
-                break;
-            }
-        }
-    }
-
-    int tick1 = chord->tick().ticks() + tickOffset;
-    bool tieFor = note->tieFor();
-    bool tieBack = note->tieBack();
-
-    NoteEventList nel = note->playEvents();
-    size_t nels = nel.size();
-    for (int i = 0, pitch = note->ppitch(); i < static_cast<int>(nels); ++i) {
-        const NoteEvent& e = nel[i];     // we make an explicit const ref, not a const copy.  no need to copy as we won't change the original object.
-
-        // skip if note has a tie into it and only one NoteEvent
-        // its length was already added to previous note
-        // if we wish to suppress first note of ornament
-        // then change "nels == 1" to "i == 0", and change "break" to "continue"
-        if (tieBack && nels == 1 && !isGlissandoFor(note)) {
-            break;
-        }
-        int p = pitch + e.pitch();
-        if (p < 0) {
-            p = 0;
-        }
-        else if (p > 127) {
-            p = 127;
-        }
-        int on = tick1 + (ticks * e.ontime()) / 1000;
-        int off = on + (ticks * e.len()) / 1000 - 1;
-        if (tieFor && i == static_cast<int>(nels) - 1) {
-            off += tieLen;
-        }
-
-        // Get the velocity used for this note from the staff
-        // This allows correct playback of tremolos even without SND enabled.
-        int velo;
-        Fraction nonUnwoundTick = Fraction::fromTicks(on - tickOffset);
-        if (config.useSND) {
-            switch (config.method) {
-            case DynamicsRenderMethod::FIXED_MAX:
-                velo = 127;
-                break;
-            case DynamicsRenderMethod::SEG_START:
-            default:
-                velo = staff->velocities().val(nonUnwoundTick);
-                break;
-            }
-        }
-        else {
-            velo = staff->velocities().val(nonUnwoundTick);
-        }
-
-        velo *= velocityMultiplier;
-        playNote(events, note, channel, p, std::clamp(velo, 1, 127), on, off, staffIdx);
-
-
-        // ADD ALL ARTICULATIONS THAT WE WANT TO TRIGGER AS CC EVENTS HERE:
-        addMidiCCArticulations(events, channel, note, tickOffset, staffIdx);
-
-    }
+    // ADD ALL ARTICULATIONS THAT WE WANT TO TRIGGER AS CC EVENTS HERE:
+    addMidiCCArticulations(events, channel, note, tickOffset, staffIdx);
 
 }
 
@@ -1027,19 +937,19 @@ void MidiRenderer::collectMeasureEventsDefault(EventMap* events, Measure const* 
             if (!graceNotesMerged(chord)) {
                 for (Chord* c : chord->graceNotesBefore()) {
                     for (const Note* note : c->notes()) {
-                        collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                        collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
                     }
                 }
             }
 
             for (const Note* note : chord->notes()) {
-                collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
             }
 
             if (!graceNotesMerged(chord)) {
                 for (Chord* c : chord->graceNotesAfter()) {
                     for (const Note* note : c->notes()) {
-                        collectNoteWithArticulations(events, channel, note, veloMultiplier, tickOffset, st1, config);
+                        collectNote(events, channel, note, veloMultiplier, tickOffset, st1, config);
                     }
                 }
             }
@@ -1388,14 +1298,14 @@ void MidiRenderer::renderSpanners(const Chunk& chunk, EventMap* events)
                     int lsb = midiPitch % 128;
                     NPlayEvent ev(ME_PITCHBEND, static_cast<uint8_t>(channel), lsb, msb);
                     ev.setOriginatingStaff(staff);
-                    events->insert(std::pair<int, NPlayEvent>(i + tickOffset, ev));
+                    //events->insert(std::pair<int, NPlayEvent>(i + tickOffset, ev)); // we only want bends and whammy dives to be on the pitchbend lane
                 }
                 lastPointTick = nextPointTick;
                 j++;
             }
             NPlayEvent ev(ME_PITCHBEND, static_cast<uint8_t>(channel), 0, 64);       // no pitch bend
             ev.setOriginatingStaff(staff);
-            events->insert(std::pair<int, NPlayEvent>(etick + tickOffset, ev));
+            //events->insert(std::pair<int, NPlayEvent>(etick + tickOffset, ev)); // we only want bends and whammy dives to be on the pitchbend lane
         } else {
             continue;
         }

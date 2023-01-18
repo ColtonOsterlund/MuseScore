@@ -15,6 +15,8 @@
 
 #include "iengravingconfiguration.h"
 
+#include <random>
+
 namespace mu::engraving {
 class GPNote;
 class GPVoice;

@@ -356,6 +356,9 @@ void GPConverter::fillTuplet()
 
 void GPConverter::convert(const std::vector<std::unique_ptr<GPMasterBar> >& masterBars)
 {
+    // seed the random number generator
+    std::srand(time(NULL));
+
     for (uint32_t mi = 0; mi < masterBars.size(); ++mi) {
         Context ctx;
         ctx.masterBarIndex = mi;
@@ -2146,6 +2149,8 @@ void GPConverter::addBend(const GPNote* gpnote, Note* note)
         note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(86, 0));
         return;
     }
+    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(86, 127));
+
 
     auto gpTimeToMuTime = [] (float time) {
         return time * 60 / 100;
@@ -2204,8 +2209,6 @@ void GPConverter::addBend(const GPNote* gpnote, Note* note)
     bend->setTrack(note->track());
     note->add(bend);
     m_bends.push_back(bend);
-
-    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(86, 127));
 
 }
 
@@ -2392,6 +2395,56 @@ void GPConverter::addDynamic(const GPBeat* gpb, ChordRest* cr)
         return;
     }
 
+
+
+    if (gpb->dynamic() == GPBeat::DynamicType::FFF) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (114 - 103 + 1) + 103)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::FF) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (102 - 90 + 1) + 90)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::F) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::MF) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (76 - 65 + 1) + 65)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::MP) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (64 - 52 + 1) + 52)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::P) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (51 - 39 + 1) + 39)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::PP) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (38 - 26 + 1) + 26)));
+        }
+    }
+    else if (gpb->dynamic() == GPBeat::DynamicType::PPP) {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (25 - 1 + 1) + 1)));
+        }
+    }
+    else {
+        for (Note* note : gpb->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
+        }
+    }
+
+
+
     if (_dynamics.count(cr->track())) {
         if (_dynamics.at(cr->track()) == gpb->dynamic()) {
             return;
@@ -2418,53 +2471,6 @@ void GPConverter::addDynamic(const GPBeat* gpb, ChordRest* cr)
         }
         return u"ppp";
     };
-
-
-	if (gpb->dynamic() == GPBeat::DynamicType::FFF) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (114 - 103 + 1) + 103)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::FF) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (102 - 90 + 1) + 90)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::F) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::MF) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (76 - 65 + 1) + 65)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::MP) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (64 - 52 + 1) + 52)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::P) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (51 - 39 + 1) + 39)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::PP) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (38 - 26 + 1) + 26)));
-		}
-	}
-	else if (gpb->dynamic() == GPBeat::DynamicType::PPP) {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (25 - 1 + 1) + 1)));
-		}
-	}
-	else {
-		for (Note* note : gpb->convertedNotes()) {
-			note->MidiCCArticulations.emplace(int(MidiCCArticulationType::DYNAMIC), std::make_tuple(85, (std::rand() % (89 - 77 + 1) + 77)));
-		}
-	}
 
     Dynamic* dynamic = Factory::createDynamic(_score->dummy()->segment());
     dynamic->setTrack(cr->track());
@@ -2624,6 +2630,7 @@ void GPConverter::addLetRing(const GPNote* gpnote, Note* note)
         m_currentGPBeat->setLetRing(true);
         if (engravingConfiguration()->guitarProImportExperimental()) {
             m_letRingNotes[note->track()][note->pitch()][note->tick()].push_back(note);
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LETRING), std::make_tuple(87, 127));
         }
     }
 }
@@ -2672,7 +2679,7 @@ void GPConverter::addDive(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->dive()) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 63));
         }
     }
     else {
@@ -2680,6 +2687,7 @@ void GPConverter::addDive(const GPBeat* beat, ChordRest* cr)
             note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 0));
         }
     }
+
     addLineElement(cr, m_dives, ElementType::WHAMMY_BAR, LineImportType::WHAMMY_BAR, beat->dive());
 }
 
@@ -2691,6 +2699,97 @@ void GPConverter::addPickScrape(const GPBeat* beat, ChordRest* cr)
 void GPConverter::addRasgueado(const GPBeat* beat, ChordRest* cr)
 {
     addLineElement(cr, m_rasgueados, ElementType::RASGUEADO, LineImportType::RASGUEADO, beat->rasgueado() != GPBeat::Rasgueado::None);
+
+    if (beat->rasgueado() == GPBeat::Rasgueado::AMII_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 7));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::AMIP_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 14));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::AMI_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 21));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::AMI_2) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 28));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::EAMII_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 35));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::EAMI_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 42));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::II_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 49));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::MII_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 56));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::MII_2) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 63));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PAI_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 70));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PAI_2) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 77));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PEAMI_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 84));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PEI_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 91));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PEI_2) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 98));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PMP_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 105));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PMP_2) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 112));
+        }
+    }
+    else if (beat->rasgueado() == GPBeat::Rasgueado::PPP_1) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 127));
+        }
+    }
+    else {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(89, 0));
+        }
+    }
 }
 
 void GPConverter::addHarmonicMark(const GPBeat* gpbeat, ChordRest* cr)
@@ -3005,6 +3104,17 @@ void GPConverter::addVibratoWTremBar(const GPBeat* beat, ChordRest* cr)
         return;
     }
 
+    if (beat->vibrato() == GPBeat::VibratoWTremBar::Slight) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 93));
+        }
+    }
+    else if (beat->vibrato() == GPBeat::VibratoWTremBar::Wide) {
+        for (Note* note : beat->convertedNotes()) {
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(29, 127));
+        }
+    }
+
     auto scoreVibrato = [](GPBeat::VibratoWTremBar vr) {
         if (vr == GPBeat::VibratoWTremBar::Slight) {
             return VibratoType::VIBRATO_SAWTOOTH;
@@ -3077,6 +3187,22 @@ void GPConverter::addHairPin(const GPBeat* beat, ChordRest* cr)
         if (elem && elem->isHairpin()) {
             toHairpin(elem)->setHairpinType(
                 beat->hairpin() == GPBeat::Hairpin::Crescendo ? HairpinType::CRESC_HAIRPIN : HairpinType::DECRESC_HAIRPIN);
+        }
+
+        if (beat->hairpin() == GPBeat::Hairpin::Crescendo) {
+            for (Note* note : beat->convertedNotes()) {
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(88, 63));
+            }
+        }
+        else if (beat->hairpin() == GPBeat::Hairpin::Crescendo) {
+            for (Note* note : beat->convertedNotes()) {
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(88, 127));
+            }
+        }
+        else {
+            for (Note* note : beat->convertedNotes()) {
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(88, 0));
+            }
         }
     }
 }
