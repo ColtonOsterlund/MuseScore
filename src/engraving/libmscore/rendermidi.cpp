@@ -99,11 +99,6 @@ std::map<int, std::map<int, int>> PreviousMidiCCArticulationValueDict = {};
 static void addMidiCCArticulations(EventMap* events, int channel, const Note* note, int tickOffset, int staffIdx)
 {
 
-    // Data structure to keep track of current articulations for the current note in order to add 0's for the articulations that don't contain info for the current note
-    // The structure is: <staffIdx, <ccLane, ccValue>>
-    std::map<int, std::map<int, int>> CurrentMidiCCArticulationValueDict = {};
-
-
     for (auto const& [key, val] : note->MidiCCArticulations) {
         int ccLane = std::get<0>(val);
         int ccValue = std::get<1>(val);
@@ -120,14 +115,16 @@ static void addMidiCCArticulations(EventMap* events, int channel, const Note* no
             event.setOriginatingStaff(staffIdx);
             events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
             PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
-            CurrentMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
         }
 
     }
 
     for (int laneVal = int(MidiCCArticulationType::FIRST); laneVal <= int(MidiCCArticulationType::LAST); laneVal++) {
+
+        bool addZero = true;
+
         switch (laneVal) { //this makes it possible to iterate through the enum being that it does not contain sequential values
-            case int(MidiCCArticulationType::PALMMUTE): //intentional fall-through
+            case int(MidiCCArticulationType::PALMMUTE) : //intentional fall-through
             case int(MidiCCArticulationType::GHOSTDEADNOTE) : //intentional fall-through
             case int(MidiCCArticulationType::PICKSCRAPE) : //intentional fall-through
             case int(MidiCCArticulationType::HARMONIC) : //intentional fall-through
@@ -161,16 +158,24 @@ static void addMidiCCArticulations(EventMap* events, int channel, const Note* no
             case int(MidiCCArticulationType::ARPEGGIO) : //intentional fall-through
             case int(MidiCCArticulationType::CONTINUOUSSLIDE) : //intentional fall-through
             case int(MidiCCArticulationType::HAMMERONPULLOFF) :
-                if (CurrentMidiCCArticulationValueDict[staffIdx].find(laneVal) == CurrentMidiCCArticulationValueDict[staffIdx].end()) { //check if the lane has already had a value entered for this note
-                    // if the lane has not already had a value entered for this note, insert a 0
+
+                // Find the other notes currently being played
+                for (Note* simultaneousNote : note->chord()->notes()) {
+                    //check if any of the notes have current values for the lane
+                    if (simultaneousNote->MidiCCArticulations.find(laneVal) != simultaneousNote->MidiCCArticulations.end()) {
+                        addZero = false;
+                    }
+                }
+
+                if (addZero) {
                     if (PreviousMidiCCArticulationValueDict[staffIdx][laneVal] != 0) {
                         NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, laneVal, 0);
                         event.setOriginatingStaff(staffIdx);
                         events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
                         PreviousMidiCCArticulationValueDict[staffIdx][laneVal] = 0;
-                        CurrentMidiCCArticulationValueDict[staffIdx][laneVal] = 0;
                     }
                 }
+
             default:
                 continue;
         }

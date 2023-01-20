@@ -1888,9 +1888,6 @@ void GPConverter::addVibratoLeftHand(const GPNote* gpnote, Note* note)
         case GPNote::VibratoType::Wide:
             note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 127));
             break;
-        default:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 0));
-            break;
     }
 
     addVibratoByType(note, vibratoType);
@@ -1917,9 +1914,6 @@ void GPConverter::addHarmonic(const GPNote* gpnote, Note* note)
             break;
         case GPNote::Harmonic::Type::FeedBack:
             note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 127));
-            break;
-        default:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 0));
             break;
     }
 
