@@ -110,7 +110,7 @@ static void addMidiCCArticulations(EventMap* events, int channel, const Note* no
             }
         }
 
-        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) {
+        if (int(key) == int(MidiCCArticulationType::WHAMMY) || ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) {
             NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
             event.setOriginatingStaff(staffIdx);
             events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
