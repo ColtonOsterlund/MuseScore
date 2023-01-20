@@ -99,30 +99,82 @@ std::map<int, std::map<int, int>> PreviousMidiCCArticulationValueDict = {};
 static void addMidiCCArticulations(EventMap* events, int channel, const Note* note, int tickOffset, int staffIdx)
 {
 
+    // Data structure to keep track of current articulations for the current note in order to add 0's for the articulations that don't contain info for the current note
+    // The structure is: <staffIdx, <ccLane, ccValue>>
+    std::map<int, std::map<int, int>> CurrentMidiCCArticulationValueDict = {};
+
+
     for (auto const& [key, val] : note->MidiCCArticulations) {
         int ccLane = std::get<0>(val);
         int ccValue = std::get<1>(val);
 
-        if (int(key) == int(MidiCCArticulationType::WHAMMY)) {
-            if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane] || ccValue != 0) { 
-                NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
-                event.setOriginatingStaff(staffIdx);
-                events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
-                PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+        // Find the other notes currently being played
+        for (Note* simultaneousNote : note->chord()->notes()) {
+            if (simultaneousNote->MidiCCArticulations.find(key) != simultaneousNote->MidiCCArticulations.end()) {
+                ccValue = std::max(ccValue, std::get<1>(simultaneousNote->MidiCCArticulations[key]));
             }
-
         }
-        else {
-            if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) { 
-                NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
-                event.setOriginatingStaff(staffIdx);
-                events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
-                PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
-            }
+
+        if (ccValue != PreviousMidiCCArticulationValueDict[staffIdx][ccLane]) {
+            NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, ccLane, ccValue);
+            event.setOriginatingStaff(staffIdx);
+            events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+            PreviousMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
+            CurrentMidiCCArticulationValueDict[staffIdx][ccLane] = ccValue;
         }
 
     }
 
+    for (int laneVal = int(MidiCCArticulationType::FIRST); laneVal <= int(MidiCCArticulationType::LAST); laneVal++) {
+        switch (laneVal) { //this makes it possible to iterate through the enum being that it does not contain sequential values
+            case int(MidiCCArticulationType::PALMMUTE): //intentional fall-through
+            case int(MidiCCArticulationType::GHOSTDEADNOTE) : //intentional fall-through
+            case int(MidiCCArticulationType::PICKSCRAPE) : //intentional fall-through
+            case int(MidiCCArticulationType::HARMONIC) : //intentional fall-through
+            case int(MidiCCArticulationType::TRILL) : //intentional fall-through
+            case int(MidiCCArticulationType::VIBRATO) : //intentional fall-through
+            case int(MidiCCArticulationType::TAPPING) : //intentional fall-through
+            case int(MidiCCArticulationType::SINGLESLIDE) : //intentional fall-through
+            case int(MidiCCArticulationType::FINGERING) : //intentional fall-through
+            case int(MidiCCArticulationType::PICKSTROKE) : //intentional fall-through
+            case int(MidiCCArticulationType::SLAPPOP) : //intentional fall-through
+            case int(MidiCCArticulationType::ACCENT) : //intentional fall-through
+            case int(MidiCCArticulationType::WHAMMY) : //intentional fall-through
+            case int(MidiCCArticulationType::FADING) : //intentional fall-through
+            case int(MidiCCArticulationType::GOLPE) : //intentional fall-through
+            case int(MidiCCArticulationType::DYNAMIC) : //intentional fall-through
+            case int(MidiCCArticulationType::BEND) : //intentional fall-through
+            case int(MidiCCArticulationType::LETRING) : //intentional fall-through
+            case int(MidiCCArticulationType::HAIRPIN) : //intentional fall-through
+            case int(MidiCCArticulationType::RASGUEADO) : //intentional fall-through
+            case int(MidiCCArticulationType::TREMOLO) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING8) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING7) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING6) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING5) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING4) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING3) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING2) : //intentional fall-through
+            case int(MidiCCArticulationType::STRING1) : //intentional fall-through
+            case int(MidiCCArticulationType::BARRE) : //intentional fall-through
+            case int(MidiCCArticulationType::LEGATO) : //intentional fall-through
+            case int(MidiCCArticulationType::ARPEGGIO) : //intentional fall-through
+            case int(MidiCCArticulationType::CONTINUOUSSLIDE) : //intentional fall-through
+            case int(MidiCCArticulationType::HAMMERONPULLOFF) :
+                if (CurrentMidiCCArticulationValueDict[staffIdx].find(laneVal) == CurrentMidiCCArticulationValueDict[staffIdx].end()) { //check if the lane has already had a value entered for this note
+                    // if the lane has not already had a value entered for this note, insert a 0
+                    if (PreviousMidiCCArticulationValueDict[staffIdx][laneVal] != 0) {
+                        NPlayEvent event = NPlayEvent(ME_CONTROLLER, channel, laneVal, 0);
+                        event.setOriginatingStaff(staffIdx);
+                        events->insert(std::pair<int, NPlayEvent>(note->chord()->tick().ticks() + tickOffset, event));
+                        PreviousMidiCCArticulationValueDict[staffIdx][laneVal] = 0;
+                        CurrentMidiCCArticulationValueDict[staffIdx][laneVal] = 0;
+                    }
+                }
+            default:
+                continue;
+        }
+    }
 }
 
 

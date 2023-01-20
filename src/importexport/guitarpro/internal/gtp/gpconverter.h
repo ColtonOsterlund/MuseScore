@@ -147,7 +147,6 @@ private:
     void addGhostDeadNote(const GPNote* gpnote, Note* note);
     void collectContinuousSlide(const GPNote* gpnote, Note* note);
     void collectHammerOn(const GPNote* gpnote, Note* note);
-    void mergeSlidesHammerOns(const GPNote* gpnote, Note* note);
     void addBend(const GPNote* gpnote, Note* note);
     void setPitch(Note* note, const GPNote::MidiPitch& midiPitch);
     void setTpc(Note* note, int accidental);
@@ -195,8 +194,7 @@ private:
     void fillTuplet();
     bool tupletParamsChanged(const GPBeat* beat, const ChordRest* cr);
 
-    void addLineElement(ChordRest* cr, std::vector<SLine*>& elements, ElementType muType, LineImportType importType, bool elemExists,
-                        bool splitByRests = false);
+    void addLineElement(ChordRest* cr, std::vector<SLine*>& elements, ElementType muType, LineImportType importType, bool elemExists, bool splitByRests = false);
 
     void setBeamMode(const GPBeat* beat, ChordRest* cr, Measure* measure, Fraction tick);
 
