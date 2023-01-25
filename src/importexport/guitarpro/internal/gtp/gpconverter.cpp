@@ -1301,21 +1301,21 @@ void GPConverter::addContinuousSlideHammerOn()
 
         switch (slide.second) {
             case SlideHammerOn::Slide:
-                startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 63));
-                endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 63));
+                startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 1));
+                endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 1));
                 break;
             case SlideHammerOn::LegatoSlide:
-                startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 127));
-                endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 127));
+                startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 2));
+                endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::CONTINUOUSSLIDE), std::make_tuple(int(MidiCCArticulationType::CONTINUOUSSLIDE), 2));
                 break;
             case SlideHammerOn::HammerOn:
                 if (startNote->pitch() <= endNote->pitch()) { // HAMMER-ON
-                    startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 63));
-                    endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 63));
+                    startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 1));
+                    endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 1));
                 }
                 else { // PULL-OFF
-                    startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 127));
-                    endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 127));
+                    startNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 2));
+                    endNote->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAMMERONPULLOFF), std::make_tuple(int(MidiCCArticulationType::HAMMERONPULLOFF), 2));
                 }
                 break;
         }
@@ -1759,19 +1759,19 @@ void GPConverter::addFingering(const GPNote* gpnote, Note* note)
         note->add(f);
 
         if (gpnote->rightFingering() == "p") {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 25));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 1));
         }
         else if (gpnote->rightFingering() == "i") {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 50));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 2));
         }
         else if (gpnote->rightFingering() == "m") {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 75));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 3));
         }
         else if (gpnote->rightFingering() == "a") {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 100));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 4));
         }
         else if (gpnote->rightFingering() == "c") {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FINGERING), std::make_tuple(int(MidiCCArticulationType::FINGERING), 5));
         }
     }
 }
@@ -1782,28 +1782,28 @@ void GPConverter::addStringNumber(const GPNote* gpnote, Note* note)
 
     switch (currentStringNumber) {
     case 8:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING8), std::make_tuple(int(MidiCCArticulationType::STRING8), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING8), std::make_tuple(int(MidiCCArticulationType::STRING8), 1));
         break;
     case 7:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING7), std::make_tuple(int(MidiCCArticulationType::STRING7), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING7), std::make_tuple(int(MidiCCArticulationType::STRING7), 1));
         break;
     case 6:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING6), std::make_tuple(int(MidiCCArticulationType::STRING6), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING6), std::make_tuple(int(MidiCCArticulationType::STRING6), 1));
         break;
     case 5:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING5), std::make_tuple(int(MidiCCArticulationType::STRING5), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING5), std::make_tuple(int(MidiCCArticulationType::STRING5), 1));
         break;
     case 4:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING4), std::make_tuple(int(MidiCCArticulationType::STRING4), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING4), std::make_tuple(int(MidiCCArticulationType::STRING4), 1));
         break;
     case 3:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING3), std::make_tuple(int(MidiCCArticulationType::STRING3), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING3), std::make_tuple(int(MidiCCArticulationType::STRING3), 1));
         break;
     case 2:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING2), std::make_tuple(int(MidiCCArticulationType::STRING2), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING2), std::make_tuple(int(MidiCCArticulationType::STRING2), 1));
         break;
     case 1:
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING1), std::make_tuple(int(MidiCCArticulationType::STRING1), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::STRING1), std::make_tuple(int(MidiCCArticulationType::STRING1), 1));
         break;
     }
 
@@ -1828,7 +1828,7 @@ void GPConverter::addTrill(const GPNote* gpnote, Note* note)
     }
 
     m_currentGPBeat->setTrill(true);
-    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TRILL), std::make_tuple(int(MidiCCArticulationType::TRILL), 127));
+    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TRILL), std::make_tuple(int(MidiCCArticulationType::TRILL), 1));
 }
 
 void GPConverter::addTrill(const GPBeat* gpbeat, ChordRest* cr)
@@ -1883,10 +1883,10 @@ void GPConverter::addVibratoLeftHand(const GPNote* gpnote, Note* note)
 
     switch (vibratoType) {
         case GPNote::VibratoType::Slight:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 1));
             break;
         case GPNote::VibratoType::Wide:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::VIBRATO), std::make_tuple(int(MidiCCArticulationType::VIBRATO), 2));
             break;
     }
 
@@ -1898,22 +1898,22 @@ void GPConverter::addHarmonic(const GPNote* gpnote, Note* note)
 
     switch (gpnote->harmonic().type) {
         case GPNote::Harmonic::Type::Natural:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 21));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 1));
             break;
         case GPNote::Harmonic::Type::Artificial:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 42));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 2));
             break;
         case GPNote::Harmonic::Type::Pinch:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 3));
             break;
         case GPNote::Harmonic::Type::Tap:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 84));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 4));
             break;
         case GPNote::Harmonic::Type::Semi:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 105));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 5));
             break;
         case GPNote::Harmonic::Type::FeedBack:
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HARMONIC), std::make_tuple(int(MidiCCArticulationType::HARMONIC), 6));
             break;
     }
 
@@ -1991,16 +1991,16 @@ void GPConverter::addAccent(const GPNote* gpnote, Note* note)
 
             switch (accentType(flagIdx)) {
             case SymId::articStaccatoAbove:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 31));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 1));
                 break;
             case SymId::articMarcatoAbove:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 62));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 2));
                 break;
             case SymId::articAccentAbove:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 93));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 3));
                 break;
             case SymId::dynamicSforzando:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 127));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ACCENT), std::make_tuple(int(MidiCCArticulationType::ACCENT), 4));
                 break;
             }
 
@@ -2042,7 +2042,7 @@ void GPConverter::addAllTapping(const GPNote* gpnote, Note* note)
     }
 
     if (gpnote->tapping()) {
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(int(MidiCCArticulationType::TAPPING), 63));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(int(MidiCCArticulationType::TAPPING), 1));
 
         if (Chord* ch = toChord(note->parent())) {
             Articulation* art = mu::engraving::Factory::createArticulation(_score->dummy()->chord());
@@ -2051,7 +2051,7 @@ void GPConverter::addAllTapping(const GPNote* gpnote, Note* note)
         }
     }
     else if (gpnote->leftHandTapped()) {
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(int(MidiCCArticulationType::TAPPING), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TAPPING), std::make_tuple(int(MidiCCArticulationType::TAPPING), 2));
 
         Articulation* art = Factory::createArticulation(note->score()->dummy()->chord());
         art->setSymId(SymId::guitarLeftHandTapping);
@@ -2096,16 +2096,16 @@ void GPConverter::addSingleSlide(const GPNote* gpnote, Note* note)
 
             switch (type.second) {
             case Note::SlideType::Fall:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 31));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 1));
                 break;
             case Note::SlideType::Doit:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 62));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 2));
                 break;
             case Note::SlideType::Lift:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 93));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 3));
                 break;
             case Note::SlideType::Plop:
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 127));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SINGLESLIDE), std::make_tuple(int(MidiCCArticulationType::SINGLESLIDE), 4));
                 break;
             }
 
@@ -2144,7 +2144,7 @@ void GPConverter::addPickScrape(const GPNote* gpnote, Note* note)
 
         m_currentGPBeat->setPickScrape(true);
 
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSCRAPE), std::make_tuple(int(MidiCCArticulationType::PICKSCRAPE), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSCRAPE), std::make_tuple(int(MidiCCArticulationType::PICKSCRAPE), 1));
     }
 }
 
@@ -2161,7 +2161,7 @@ void GPConverter::addBend(const GPNote* gpnote, Note* note)
     if (!gpnote->bend()) {
         return;
     }
-    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(int(MidiCCArticulationType::BEND), 127));
+    note->MidiCCArticulations.emplace(int(MidiCCArticulationType::BEND), std::make_tuple(int(MidiCCArticulationType::BEND), 1));
 
 
     auto gpTimeToMuTime = [] (float time) {
@@ -2594,17 +2594,17 @@ void GPConverter::addLegato(const GPBeat* beat, ChordRest* cr)
 
     if (beat->legatoType() == GPBeat::LegatoType::Start) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 42));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 1));
         }
         startSlur(cr, _score, _slurs, cr->track(), cr->tick());
     } else if (beat->legatoType() == GPBeat::LegatoType::Mediate) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 84));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 2));
         }
         mediateSlur(cr, _slurs, cr->track(), cr->tick());
     } else if (beat->legatoType() == GPBeat::LegatoType::End) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LEGATO), std::make_tuple(int(MidiCCArticulationType::LEGATO), 3));
         }
         endSlur(cr, _slurs, cr->track(), cr->tick());
     }
@@ -2659,7 +2659,7 @@ void GPConverter::addPalmMute(const GPNote* gpnote, Note* note)
 {
     if (gpnote->palmMute() && m_currentGPBeat) {
         m_currentGPBeat->setPalmMute(true);
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PALMMUTE), std::make_tuple(int(MidiCCArticulationType::PALMMUTE), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PALMMUTE), std::make_tuple(int(MidiCCArticulationType::PALMMUTE), 1));
         //note->setPalmMute(true); TODO-gp: palm mute playback
     }
 }
@@ -2672,10 +2672,10 @@ void GPConverter::addGhostDeadNote(const GPNote* gpnote, Note* note)
     note->setDeadNote(isDead);
 
     if (isGhost) {
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(int(MidiCCArticulationType::GHOSTDEADNOTE), 63));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(int(MidiCCArticulationType::GHOSTDEADNOTE), 1));
     }
     else if (isDead) {
-        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(int(MidiCCArticulationType::GHOSTDEADNOTE), 127));
+        note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GHOSTDEADNOTE), std::make_tuple(int(MidiCCArticulationType::GHOSTDEADNOTE), 2));
     }
 }
 
@@ -2683,7 +2683,7 @@ void GPConverter::addLetRing(const GPBeat* gpbeat, ChordRest* cr)
 {
     if (gpbeat->letRing()) {
         for (Note* note : gpbeat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LETRING), std::make_tuple(int(MidiCCArticulationType::LETRING), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::LETRING), std::make_tuple(int(MidiCCArticulationType::LETRING), 1));
         }
     }
 
@@ -2699,7 +2699,7 @@ void GPConverter::addDive(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->dive()) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 31));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 1));
         }
     }
 
@@ -2717,87 +2717,87 @@ void GPConverter::addRasgueado(const GPBeat* beat, ChordRest* cr)
 
     if (beat->rasgueado() == GPBeat::Rasgueado::AMII_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 7));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 1));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::AMIP_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 14));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 2));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::AMI_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 21));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 3));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::AMI_2) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 28));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 4));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::EAMII_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 35));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 5));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::EAMI_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 42));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 6));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::II_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 49));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 7));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::MII_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 56));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 8));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::MII_2) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 9));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PAI_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 70));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 10));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PAI_2) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 77));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 11));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PEAMI_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 84));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 12));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PEI_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 91));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 13));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PEI_2) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 98));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 14));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PMP_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 105));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 15));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PMP_2) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 112));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 16));
         }
     }
     else if (beat->rasgueado() == GPBeat::Rasgueado::PPP_1) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::RASGUEADO), std::make_tuple(int(MidiCCArticulationType::RASGUEADO), 17));
         }
     }
 }
@@ -2899,12 +2899,12 @@ void GPConverter::mergeSlappedPopped(const GPBeat* beat, ChordRest* cr)
 {
     if (beat->popped()) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLAPPOP), std::make_tuple(int(MidiCCArticulationType::SLAPPOP), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLAPPOP), std::make_tuple(int(MidiCCArticulationType::SLAPPOP), 2));
         }
     }
     else if (beat->slapped()) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLAPPOP), std::make_tuple(int(MidiCCArticulationType::SLAPPOP), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::SLAPPOP), std::make_tuple(int(MidiCCArticulationType::SLAPPOP), 1));
         }
     }
 }
@@ -2926,12 +2926,12 @@ void GPConverter::addBrush(const GPBeat* beat, ChordRest* cr)
     Arpeggio* arp = mu::engraving::Factory::createArpeggio(_score->dummy()->chord());
     if (brushType(beat->brush()) == ArpeggioType::UP_STRAIGHT) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 1));
         }
     }
     else {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 2));
         }
     }
     arp->setArpeggioType(brushType(beat->brush()));
@@ -2957,12 +2957,12 @@ void GPConverter::addArpeggio(const GPBeat* beat, ChordRest* cr)
     Arpeggio* arp = mu::engraving::Factory::createArpeggio(_score->dummy()->chord());
     if (arpeggioType(beat->arpeggio()) == ArpeggioType::UP) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ARPEGGIO), std::make_tuple(int(MidiCCArticulationType::ARPEGGIO), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ARPEGGIO), std::make_tuple(int(MidiCCArticulationType::ARPEGGIO), 1));
         }
     }
     else {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ARPEGGIO), std::make_tuple(int(MidiCCArticulationType::ARPEGGIO), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::ARPEGGIO), std::make_tuple(int(MidiCCArticulationType::ARPEGGIO), 2));
         }
     }
     arp->setArpeggioType(arpeggioType(beat->arpeggio()));
@@ -3001,7 +3001,7 @@ void GPConverter::addFreeText(const GPBeat* beat, ChordRest* cr)
     String whammyFlutterString = "flutter";
     if (text->plainText().contains(whammyFlutterString, CaseSensitivity::CaseInsensitive)) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 62));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 2));
         }
     }
     cr->segment()->add(text);
@@ -3138,12 +3138,12 @@ void GPConverter::addVibratoWTremBar(const GPBeat* beat, ChordRest* cr)
 
     if (beat->vibrato() == GPBeat::VibratoWTremBar::Slight) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 93));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 3));
         }
     }
     else if (beat->vibrato() == GPBeat::VibratoWTremBar::Wide) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::WHAMMY), std::make_tuple(int(MidiCCArticulationType::WHAMMY), 4));
         }
     }
 
@@ -3165,17 +3165,17 @@ void GPConverter::addFadding(const GPBeat* beat, ChordRest* cr)
     }
     else if (beat->fadding() == GPBeat::Fadding::FadeIn) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 42));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 1));
         }
     }
     else if (beat->fadding() == GPBeat::Fadding::FadeOut) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 84));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 2));
         }
     }
     else if(beat->fadding() == GPBeat::Fadding::VolumeSwell) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::FADING), std::make_tuple(int(MidiCCArticulationType::FADING), 3));
         }
     }
 
@@ -3215,12 +3215,12 @@ void GPConverter::addHairPin(const GPBeat* beat, ChordRest* cr)
 
         if (beat->hairpin() == GPBeat::Hairpin::Crescendo) {
             for (Note* note : beat->convertedNotes()) {
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(int(MidiCCArticulationType::HAIRPIN), 63));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(int(MidiCCArticulationType::HAIRPIN), 1));
             }
         }
         else if (beat->hairpin() == GPBeat::Hairpin::Crescendo) {
             for (Note* note : beat->convertedNotes()) {
-                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(int(MidiCCArticulationType::HAIRPIN), 127));
+                note->MidiCCArticulations.emplace(int(MidiCCArticulationType::HAIRPIN), std::make_tuple(int(MidiCCArticulationType::HAIRPIN), 2));
             }
         }
     }
@@ -3233,12 +3233,12 @@ void GPConverter::addPickStroke(const GPBeat* beat, ChordRest* cr)
     }
     else if (beat->pickStroke() == GPBeat::PickStroke::Up) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 1));
         }
     }
     else if (beat->pickStroke() == GPBeat::PickStroke::Down) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::PICKSTROKE), std::make_tuple(int(MidiCCArticulationType::PICKSTROKE), 2));
         }
     }
 
@@ -3281,17 +3281,17 @@ void GPConverter::addTremolo(const GPBeat* beat, ChordRest* cr)
 
     if (scoreTremolo(beat->tremolo()) == TremoloType::R8) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 42));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 1));
         }
     }
     else if (scoreTremolo(beat->tremolo()) == TremoloType::R16) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 84));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 2));
         }
     }
     else if (scoreTremolo(beat->tremolo()) == TremoloType::R32) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::TREMOLO), std::make_tuple(int(MidiCCArticulationType::TREMOLO), 3));
         }
     }
 
@@ -3330,12 +3330,12 @@ void GPConverter::addGolpe(const GPBeat* beat, ChordRest* cr)
     }
     else if (beat->golpe() == GPBeat::Golpe::Finger) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GOLPE), std::make_tuple(int(MidiCCArticulationType::GOLPE), 63));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GOLPE), std::make_tuple(int(MidiCCArticulationType::GOLPE), 1));
         }
     }
     else if (beat->golpe() == GPBeat::Golpe::Thumb) {
         for (Note* note : beat->convertedNotes()) {
-            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GOLPE), std::make_tuple(int(MidiCCArticulationType::GOLPE), 127));
+            note->MidiCCArticulations.emplace(int(MidiCCArticulationType::GOLPE), std::make_tuple(int(MidiCCArticulationType::GOLPE), 2));
         }
     }
     if (cr->type() != ElementType::CHORD) {
