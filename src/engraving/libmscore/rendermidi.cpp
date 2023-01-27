@@ -595,68 +595,68 @@ static void collectNote(EventMap* events, int channel, const Note* note, double 
     //}
 
 
-    // Bends
-    for (EngravingItem* e : note->el()) {
-        if (e == 0 || (e->type() != ElementType::BEND && e->type() != ElementType::STRETCHED_BEND)) {
-            continue;
-        }
-        Bend* bend = toBend(e);
-        if (!bend->playBend()) {
-            break;
-        }
-        const PitchValues& points = bend->points();
-        size_t pitchSize = points.size();
+    //// Bends
+    //for (EngravingItem* e : note->el()) {
+    //    if (e == 0 || (e->type() != ElementType::BEND && e->type() != ElementType::STRETCHED_BEND)) {
+    //        continue;
+    //    }
+    //    Bend* bend = toBend(e);
+    //    if (!bend->playBend()) {
+    //        break;
+    //    }
+    //    const PitchValues& points = bend->points();
+    //    size_t pitchSize = points.size();
 
-        double noteLen = note->playTicks();
-        int lastPointTick = tick1;
-        for (size_t pitchIndex = 0; pitchIndex < pitchSize - 1; pitchIndex++) {
-            PitchValue pitchValue = points[pitchIndex];
-            PitchValue nextPitch = points[pitchIndex + 1];
-            int nextPointTick = tick1 + nextPitch.time / 60.0 * noteLen;
-            int pitch = pitchValue.pitch;
+    //    double noteLen = note->playTicks();
+    //    int lastPointTick = tick1;
+    //    for (size_t pitchIndex = 0; pitchIndex < pitchSize - 1; pitchIndex++) {
+    //        PitchValue pitchValue = points[pitchIndex];
+    //        PitchValue nextPitch = points[pitchIndex + 1];
+    //        int nextPointTick = tick1 + nextPitch.time / 60.0 * noteLen;
+    //        int pitch = pitchValue.pitch;
 
-            if (pitchIndex == 0 && (pitch == nextPitch.pitch)) {
-                int midiPitch = (pitch * 16384) / 1200 + 8192;
-                int msb = midiPitch / 128;
-                int lsb = midiPitch % 128;
-                NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
-                ev.setOriginatingStaff(staffIdx);
-                events->insert(std::pair<int, NPlayEvent>(lastPointTick, ev));
-                lastPointTick = nextPointTick;
-                continue;
-            }
-            if (pitch == nextPitch.pitch && !(pitchIndex == 0 && pitch != 0)) {
-                lastPointTick = nextPointTick;
-                continue;
-            }
+    //        if (pitchIndex == 0 && (pitch == nextPitch.pitch)) {
+    //            int midiPitch = (pitch * 16384) / 1200 + 8192;
+    //            int msb = midiPitch / 128;
+    //            int lsb = midiPitch % 128;
+    //            NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
+    //            ev.setOriginatingStaff(staffIdx);
+    //            events->insert(std::pair<int, NPlayEvent>(lastPointTick, ev));
+    //            lastPointTick = nextPointTick;
+    //            continue;
+    //        }
+    //        if (pitch == nextPitch.pitch && !(pitchIndex == 0 && pitch != 0)) {
+    //            lastPointTick = nextPointTick;
+    //            continue;
+    //        }
 
-            double pitchDelta = nextPitch.pitch - pitch;
-            double tickDelta = nextPitch.time - pitchValue.time;
-            /*         B
-                      /.                   pitch is 1/100 semitones
-              bend   / .  pitchDelta       time is in noteDuration/60
-                    /  .                   midi pitch is 12/16384 semitones
-                   A....
-                 tickDelta   */
-            for (int i = lastPointTick; i <= nextPointTick; i += 16) {
-                double dx = ((i - lastPointTick) * 60) / noteLen;
-                int p = pitch + dx * pitchDelta / tickDelta;
+    //        double pitchDelta = nextPitch.pitch - pitch;
+    //        double tickDelta = nextPitch.time - pitchValue.time;
+    //        /*         B
+    //                  /.                   pitch is 1/100 semitones
+    //          bend   / .  pitchDelta       time is in noteDuration/60
+    //                /  .                   midi pitch is 12/16384 semitones
+    //               A....
+    //             tickDelta   */
+    //        for (int i = lastPointTick; i <= nextPointTick; i += 16) {
+    //            double dx = ((i - lastPointTick) * 60) / noteLen;
+    //            int p = pitch + dx * pitchDelta / tickDelta;
 
-                // We don't support negative pitch, but Midi does. Let's center by adding 8192.
-                int midiPitch = (p * 16384) / 1200 + 8192;
-                // Representing pitch as two bytes
-                int msb = midiPitch / 128;
-                int lsb = midiPitch % 128;
-                NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
-                ev.setOriginatingStaff(staffIdx);
-                events->insert(std::pair<int, NPlayEvent>(i, ev));
-            }
-            lastPointTick = nextPointTick;
-        }
-        NPlayEvent ev(ME_PITCHBEND, channel, 0, 64);     // 0:64 is 8192 - no pitch bend
-        ev.setOriginatingStaff(staffIdx);
-        events->insert(std::pair<int, NPlayEvent>(tick1 + int(noteLen), ev));
-    }
+    //            // We don't support negative pitch, but Midi does. Let's center by adding 8192.
+    //            int midiPitch = (p * 16384) / 1200 + 8192;
+    //            // Representing pitch as two bytes
+    //            int msb = midiPitch / 128;
+    //            int lsb = midiPitch % 128;
+    //            NPlayEvent ev(ME_PITCHBEND, channel, lsb, msb);
+    //            ev.setOriginatingStaff(staffIdx);
+    //            events->insert(std::pair<int, NPlayEvent>(i, ev));
+    //        }
+    //        lastPointTick = nextPointTick;
+    //    }
+    //    NPlayEvent ev(ME_PITCHBEND, channel, 0, 64);     // 0:64 is 8192 - no pitch bend
+    //    ev.setOriginatingStaff(staffIdx);
+    //    events->insert(std::pair<int, NPlayEvent>(tick1 + int(noteLen), ev));
+    //}
 
     // ADD ALL ARTICULATIONS THAT WE WANT TO TRIGGER AS CC EVENTS HERE:
     addMidiCCArticulations(events, channel, note, tickOffset, staffIdx);
